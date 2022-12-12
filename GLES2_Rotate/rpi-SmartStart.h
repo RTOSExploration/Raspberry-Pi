@@ -7,7 +7,7 @@ extern "C" {									// Put extern C directive wrapper around
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
 {																			}			
-{       Filename: rpi-smartstart.h											}
+{       Filename: rpi-SmartStart.h											}
 {       Copyright(c): Leon de Boer(LdB) 2017								}
 {       Version: 2.02														}
 {																			}		
@@ -53,11 +53,7 @@ extern "C" {									// Put extern C directive wrapper around
 #define BitFontWth 8
 
 /* print handler function proto type */
-/* you can make a UART or SCREEN version and direct output to that call */
 typedef int (*printhandler) (const char *fmt, ...);
-
-/* Timer interrupt handler function proto type */
-typedef void (*TimerIrqHandler) (void);
 
 /***************************************************************************}
 {					     PUBLIC ENUMERATION CONSTANTS			            }
@@ -229,34 +225,17 @@ typedef enum {
 {		  https://github.com/raspberrypi/firmware/wiki/Mailboxes			}
 {--------------------------------------------------------------------------*/
 typedef enum {
-	CLK_EMMC_ID		= 0x1,								// Mailbox Tag Channel EMMC clock ID 
-	CLK_UART_ID		= 0x2,								// Mailbox Tag Channel uart clock ID
-	CLK_ARM_ID		= 0x3,								// Mailbox Tag Channel ARM clock ID
-	CLK_CORE_ID		= 0x4,								// Mailbox Tag Channel SOC core clock ID
-	CLK_V3D_ID		= 0x5,								// Mailbox Tag Channel V3D clock ID
-	CLK_H264_ID		= 0x6,								// Mailbox Tag Channel H264 clock ID
-	CLK_ISP_ID		= 0x7,								// Mailbox Tag Channel ISP clock ID
-	CLK_SDRAM_ID	= 0x8,								// Mailbox Tag Channel SDRAM clock ID
-	CLK_PIXEL_ID	= 0x9,								// Mailbox Tag Channel PIXEL clock ID
-	CLK_PWM_ID		= 0xA,								// Mailbox Tag Channel PWM clock ID
+	CLK_EMMC_ID = 0x1,									// Mailbox Tag Channel EMMC clock ID 
+	CLK_UART_ID = 0x2,									// Mailbox Tag Channel uart clock ID
+	CLK_ARM_ID = 0x3,									// Mailbox Tag Channel ARM clock ID
+	CLK_CORE_ID = 0x4,									// Mailbox Tag Channel SOC core clock ID
+	CLK_V3D_ID = 0x5,									// Mailbox Tag Channel V3D clock ID
+	CLK_H264_ID = 0x6,									// Mailbox Tag Channel H264 clock ID
+	CLK_ISP_ID = 0x7,									// Mailbox Tag Channel ISP clock ID
+	CLK_SDRAM_ID = 0x8,									// Mailbox Tag Channel SDRAM clock ID
+	CLK_PIXEL_ID = 0x9,									// Mailbox Tag Channel PIXEL clock ID
+	CLK_PWM_ID = 0xA,									// Mailbox Tag Channel PWM clock ID
 } MB_CLOCK_ID;
-
-
-/*--------------------------------------------------------------------------}
-{			      ENUMERATED MAILBOX POWER BLOCK ID							}
-{		  https://github.com/raspberrypi/firmware/wiki/Mailboxes			}
-{--------------------------------------------------------------------------*/
-typedef enum {
-	PB_SDCARD		= 0x0,								// Mailbox Tag Channel SD Card power block 
-	PB_UART0		= 0x1,								// Mailbox Tag Channel UART0 power block 
-	PB_UART1		= 0x2,								// Mailbox Tag Channel UART1 power block 
-	PB_USBHCD		= 0x3,								// Mailbox Tag Channel USB_HCD power block 
-	PB_I2C0			= 0x4,								// Mailbox Tag Channel I2C0 power block 
-	PB_I2C1			= 0x5,								// Mailbox Tag Channel I2C1 power block 
-	PB_I2C2			= 0x6,								// Mailbox Tag Channel I2C2 power block 
-	PB_SPI			= 0x7,								// Mailbox Tag Channel SPI power block 
-	PB_CCP2TX		= 0x8,								// Mailbox Tag Channel CCP2TX power block 
-} MB_POWER_ID;
 
 /*--------------------------------------------------------------------------}
 ;{	  ENUMERATED CODE TARGET ... WHICH ARM CPU THE CODE IS COMPILED FOR		}
@@ -283,32 +262,32 @@ typedef enum {
 /*--------------------------------------------------------------------------}
 {				 COMPILER TARGET SETTING STRUCTURE DEFINED					}
 {--------------------------------------------------------------------------*/
-typedef union 
-{
-	struct 
-	{
-		ARM_CODE_TYPE ArmCodeTarget : 4;							// @0  Compiler code target
-		AARCH_MODE AArchMode : 1;									// @5  Code AARCH type compiler is producing
-		unsigned CoresSupported : 3;								// @6  Cores the code is setup to support
-		unsigned reserved : 24;										// @9-31 reserved
+typedef struct __attribute__((__packed__, aligned(4))) CodeType {
+	union {
+		struct __attribute__((__packed__, aligned(1))) {
+			volatile ARM_CODE_TYPE ArmCodeTarget : 4;				// @0  Compiler code target
+			volatile AARCH_MODE AArchMode : 1;						// @5  Code AARCH type compiler is producing
+			volatile unsigned CoresSupported : 3;					// @6  Cores the code is setup to support
+			unsigned reserved : 24;									// @9-31 reserved
+		};
+		uint32_t Raw32;												// Union to access all 32 bits as a uint32_t
 	};
-	uint32_t Raw32;													// Union to access all 32 bits as a uint32_t
 } CODE_TYPE;
 
 /*--------------------------------------------------------------------------}
 {						ARM CPU ID STRUCTURE DEFINED						}
 {--------------------------------------------------------------------------*/
-typedef union 
-{
-	struct 
-	{
-		unsigned Revision : 4;										// @0-3  CPU minor revision 
-		unsigned PartNumber: 12;									// @4-15  Partnumber
-		unsigned Architecture : 4;									// @16-19 Architecture
-		unsigned Variant : 4;										// @20-23 Variant
-		unsigned Implementer : 8;									// @24-31 reserved
+typedef struct __attribute__((__packed__, aligned(4))) CpuId {
+	union {
+		struct __attribute__((__packed__, aligned(1))) {
+			volatile unsigned Revision : 4;							// @0-3  CPU minor revision 
+			volatile unsigned PartNumber: 12;						// @4-15  Partnumber
+			volatile unsigned Architecture : 4;						// @16-19 Architecture
+			volatile unsigned Variant : 4;							// @20-23 Variant
+			volatile unsigned Implementer : 8;						// @24-31 reserved
+		};
+		uint32_t Raw32;												// Union to access all 32 bits as a uint32_t
 	};
-	uint32_t Raw32;													// Union to access all 32 bits as a uint32_t
 } CPU_ID;
 
 /***************************************************************************}
@@ -326,15 +305,10 @@ extern uint32_t RPi_CPUCurrentMode;				// RPI cpu current operation mode
 {                       PUBLIC C INTERFACE ROUTINES                         }
 {***************************************************************************/
 
-/*==========================================================================}
-{			 PUBLIC CPU ID ROUTINES PROVIDED BY RPi-SmartStart API			}
-{==========================================================================*/
-
-/*-[ RPi_CpuIdString]-------------------------------------------------------}
-. Returns the CPU id string of the CPU auto-detected by the SmartStart code
-. 30Jun17 LdB
-.--------------------------------------------------------------------------*/
-const char* RPi_CpuIdString (void);
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
+{					CPU ID ROUTINES PROVIDE BY RPi-SmartStart API		    }
+{++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+extern const char* RPi_CpuIdString (void);
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
 {			GLOBAL INTERRUPT CONTROL PROVIDE BY RPi-SmartStart API		    }
@@ -351,7 +325,7 @@ typedef void (*CORECALLFUNC) (void);
 extern bool CoreExecute (uint8_t coreNum, CORECALLFUNC func); 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
-{		VC4 GPU ADDRESS HELPER ROUTINES PROVIDE BY RPi-SmartStart API	    }
+{			MEMORY HELPER ROUTINES PROVIDE BY RPi-SmartStart API		    }
 {++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 /* ARM bus address to GPU bus address */
@@ -361,7 +335,7 @@ extern uint32_t ARMaddrToGPUaddr (void* ARMaddress);
 extern uint32_t GPUaddrToARMaddr (uint32_t GPUaddress);
 
 /*==========================================================================}
-{			 PUBLIC GPIO ROUTINES PROVIDED BY RPi-SmartStart API			}
+{						   PUBLIC GPIO ROUTINES								}
 {==========================================================================*/
 
 /*-[gpio_setup]-------------------------------------------------------------}
@@ -414,7 +388,7 @@ bool gpio_edgeDetect (uint_fast8_t gpio, bool lifting, bool Async);
 bool gpio_fixResistor (uint_fast8_t gpio, GPIO_FIX_RESISTOR resistor);
 
 /*==========================================================================}
-{		   PUBLIC TIMER ROUTINES PROVIDED BY RPi-SmartStart API				}
+{						   PUBLIC TIMER ROUTINES							}
 {==========================================================================*/
 
 /*-[timer_getTickCount]-----------------------------------------------------}
@@ -438,7 +412,7 @@ void timer_wait (uint64_t us);
 uint64_t tick_difference (uint64_t us1, uint64_t us2);
 
 /*==========================================================================}
-{		  PUBLIC PI MAILBOX ROUTINES PROVIDED BY RPi-SmartStart API			}
+{					     PUBLIC PI MAILBOX ROUTINES							}
 {==========================================================================*/
 
 /*-[mailbox_write]----------------------------------------------------------}
@@ -460,42 +434,17 @@ uint32_t mailbox_read (MAILBOX_CHANNEL channel);
 . This will post and execute the given variadic data onto the tags channel
 . on the mailbox system. You must provide the correct number of response
 . uint32_t variables and a pointer to the response buffer. You nominate the
-. number of data uint32_t for the call and fill the variadic data in. If you
-. do not want the response data back the use NULL for response_buffer.
+. number of data uint32_t for the call and fill the variadic data in.
 . RETURN: True for success and the response data will be set with data
 .         False for failure and the response buffer is untouched.
 . 04Jul17 LdB
 .--------------------------------------------------------------------------*/
-bool mailbox_tag_message (uint32_t* response_buf,					// Pointer to response buffer (NULL = no response wanted)
+bool mailbox_tag_message (uint32_t* response_buf,					// Pointer to response buffer 
 						  uint8_t data_count,						// Number of uint32_t data to be set for call
 						  ...);										// Variadic uint32_t values for call
 
 /*==========================================================================}
-{	  PUBLIC PI TIMER INTERRUPT ROUTINES PROVIDED BY RPi-SmartStart API		}
-{==========================================================================*/
-
-/*-[setTimerIrqAddress]-----------------------------------------------------}
-. Allocates the given TimerIrqHandler function pointer to be the call when
-. a timer interrupt occurs. As we are undoubtedly setting up the interrupt
-. the interrupt is disabled. 
-. RETURN: The old function pointer that was in use (will return 0 for 1st).
-. 19Sep17 LdB
-.--------------------------------------------------------------------------*/
-TimerIrqHandler setTimerIrqAddress (TimerIrqHandler ARMaddress);
-
-/*-[TimerIrqSetup]----------------------------------------------------------}
-. Allocates the given TimerIrqHandler function pointer to be the irq call 
-. when a timer interrupt occurs. The interrupt rate is set by providing a 
-. period in usec between triggers of the interrupt.
-. RETURN: The old function pointer that was in use (will return 0 for 1st).
-. 19Sep17 LdB
-.--------------------------------------------------------------------------*/
-TimerIrqHandler TimerIrqSetup (uint32_t period_in_us,				// Period between timer interrupts in usec
-							   TimerIrqHandler ARMaddress);         // Function to call on interrupt
-
-
-/*==========================================================================}
-{	   PUBLIC PI ACTIVITY LED ROUTINE PROVIDED BY RPi-SmartStart API		}
+{				     PUBLIC PI ACTIVITY LED ROUTINES						}
 {==========================================================================*/
 
 /*-[set_Activity_LED]-------------------------------------------------------}
@@ -507,12 +456,12 @@ TimerIrqHandler TimerIrqSetup (uint32_t period_in_us,				// Period between timer
 bool set_Activity_LED (bool on);
 
 /*==========================================================================}
-{	   PUBLIC ARM CPU SPEED SET ROUTINES PROVIDED BY RPi-SmartStart API	 	}
+{				     PUBLIC ARM CPU SPEED SET ROUTINES						}
 {==========================================================================*/
 
 /*-[ARM_setmaxspeed]--------------------------------------------------------}
 . This will set the ARM cpu to the maximum. You can optionally print confirm
-. message to screen but providing a print handler.
+. message to screen.
 . RETURN: True maxium speed was successfully set, false otherwise
 . 04Jul17 LdB
 .--------------------------------------------------------------------------*/
@@ -523,93 +472,66 @@ bool ARM_setmaxspeed (printhandler prn_handler);
 {==========================================================================*/
 
 /*-[displaySmartStart]------------------------------------------------------}
-. This will print 2 lines of basic smart start details to given print handler
+. This will simply display 2 lines of basic smart start details to screen.
 . 04Jul17 LdB
 .--------------------------------------------------------------------------*/
 void displaySmartStart (printhandler prn_handler);
-
-
-
 
 
 typedef int32_t		BOOL;							// BOOL is defined to an int32_t ... yeah windows is weird -1 is often returned
 typedef char		TCHAR;							// TCHAR is a char
 typedef uint32_t	COLORREF;						// COLORREF is a uint32_t
 typedef uintptr_t	HDC;							// HDC is really a pointer
-typedef uintptr_t	HANDLE;							// HANDLE is really a pointer
-typedef uintptr_t	HINSTANCE;						// HINSTANCE is really a pointer
-typedef uint32_t	UINT;							// UINT is an unsigned 32bit int
-typedef char*		LPCTSTR;						// LPCTSTR is a char pointer
 
 #define TRUE 1
 #define FALSE 0
 
-#define IMAGE_BITMAP	0
-#define IMAGE_ICON		1
-#define IMAGE_CURSOR	2
-
-#define LR_DEFAULTCOLOR			0x00000000
-#define LR_MONOCHROME			0x00000001
-#define LR_COLOR				0x00000002
-#define LR_COPYRETURNORG		0x00000004
-#define LR_COPYDELETEORG		0x00000008
-#define	LR_LOADFROMFILE			0x00000010
-#define LR_LOADTRANSPARENT		0x00000020
-#define LR_DEFAULTSIZE			0x00000040
-#define LR_VGACOLOR				0x00000080
-#define LR_LOADMAP3DCOLORS		0x00001000
-#define LR_CREATEDIBSECTION		0x00002000
-#define LR_COPYFROMRESOURCE		0x00004000
-#define LR_SHARED				0x00008000
-
-
 /***************************************************************************}
 {		 		    PUBLIC STRUCTURE DEFINITIONS				            }
 ****************************************************************************/
-
-typedef struct __attribute__((__packed__, aligned(1)))
-{
-	unsigned rgbBlue : 8;							// Blue
-	unsigned rgbGreen : 8;							// Green
-	unsigned rgbRed : 8;							// Red
+typedef struct __attribute__((__packed__, aligned(1))) tagRGB {
+	uint8_t rgbBlue;								// Blue
+	uint8_t rgbGreen;								// Green
+	uint8_t rgbRed;									// Red
 } RGB;
 
-
-typedef union 
-{
-	struct __attribute__((__packed__, aligned(1)))
-	{
-		unsigned rgbBlue : 8;						// Blue
-		unsigned rgbGreen : 8;						// Green
-		unsigned rgbRed : 8;						// Red
-		unsigned rgbAlpha : 8;						// Alpha
+typedef struct __attribute__((__packed__, aligned(4))) tagRGBQUAD {
+	union {
+		struct {
+			uint8_t rgbBlue;						// Blue
+			uint8_t rgbGreen;						// Green
+			uint8_t rgbRed;							// Red
+			uint8_t rgbReserved;					// Reserved
+		};
+		COLORREF ref;								// Colour reference
 	};
-	__attribute__((aligned(1))) RGB rgb;			// RGB triple (1st 3 bytes)
-	COLORREF ref;									// Color reference								
+} RGBQUAD;
+
+typedef struct __attribute__((__packed__, aligned(4))) tagRGBA {
+	union {
+		struct {
+			union {
+				struct __attribute__((__packed__, aligned(1))) {
+					uint8_t rgbBlue;				// Blue
+					uint8_t rgbGreen;				// Green
+					uint8_t rgbRed;					// Red
+				};
+				RGB rgb;							// RGB union
+			};
+			uint8_t rgbAlpha;						// Alpha
+		};
+		COLORREF ref;								// Colour reference
+	};
 } RGBA;
 
-typedef struct __attribute__((__packed__, aligned(1))) 
-{
-	unsigned B : 5;									// Blue
-	unsigned G : 6;									// Green
-	unsigned R : 5;									// Red
+
+typedef struct __attribute__((__packed__, aligned(1))) RGB565 {
+	unsigned B : 5;
+	unsigned G : 6;
+	unsigned R : 5;
 } RGB565;
 
-/*--------------------------------------------------------------------------}
-{	                 HBITMAP - HANDLE TO BITMAP IN MEMORY					}
-{--------------------------------------------------------------------------*/
-typedef union 
-{
-	uint8_t* rawImage;								// Pointer to raw byte format array
-	RGB565* __attribute__((aligned(2))) ptrRGB565;	// Pointer to RGB565 format array
-	RGB* __attribute__((aligned(1))) ptrRGB;		// Pointer to RGB format array
-	RGBA* __attribute__((aligned(4))) ptrRGBA;		// Pointer to RGBA format array
-	uintptr_t rawPtr;								// Pointer address
-} HBITMAP;
-
-
-typedef struct 
-{
+typedef struct tagPOINT {
 	int_fast32_t x;									// x co-ordinate
 	int_fast32_t y;									// y co-ordinate
 } POINT, *LPPOINT;									// Typedef define POINT and LPPOINT
@@ -618,8 +540,7 @@ typedef struct
 /*--------------------------------------------------------------------------}
 {                        BITMAP FILE HEADER DEFINITION                      }
 {--------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__, aligned(1))) 
-{
+typedef struct __attribute__((__packed__, aligned(1))) tagBITMAPFILEHEADER {
 	uint16_t  bfType; 												// Bitmap type should be "BM"
 	uint32_t  bfSize; 												// Bitmap size in bytes
 	uint16_t  bfReserved1; 											// reserved short1
@@ -630,8 +551,7 @@ typedef struct __attribute__((__packed__, aligned(1)))
 /*--------------------------------------------------------------------------}
 {                    BITMAP FILE INFO HEADER DEFINITION						}
 {--------------------------------------------------------------------------*/
-typedef struct __attribute__((__packed__, aligned(1))) 
-{
+typedef struct __attribute__((__packed__, aligned(1))) tagBITMAPINFOHEADER {
 	uint32_t biSize; 												// Bitmap file size
 	uint32_t biWidth; 												// Bitmap width
 	uint32_t biHeight;												// Bitmap height
@@ -646,17 +566,29 @@ typedef struct __attribute__((__packed__, aligned(1)))
 } BITMAPINFOHEADER;
 
 
+/*--------------------------------------------------------------------------}
+{					 CODE TYPE STRUCTURE COMPILE TIME CHECKS	            }
+{--------------------------------------------------------------------------*/
+/* If you have never seen compile time assertions it's worth google search */
+/* on "Compile Time Assertions". It is part of the C11++ specification and */
+/* all compilers that support the standard will have them (GCC, MSC inc)   */
+/*-------------------------------------------------------------------------*/
+#include <assert.h>								// Need for compile time static_assert
+
+/* Check the code type structure size */
+static_assert(sizeof(RGB) == 0x03, "Structure RGB should be 0x03 bytes in size");
+static_assert(sizeof(RGBQUAD) == 0x04, "Structure RGBQUAD should be 0x04 bytes in size");
+static_assert(sizeof(RGBA) == 0x04, "Structure RGBA should be 0x04 bytes in size");
+static_assert(sizeof(RGB565) == 0x02, "Structure RGB565 should be 0x02 bytes in size");
+
 bool PiConsole_Init(int Width, int Height, int Depth, printhandler prn_handler);
 void WriteText(int x, int y, char* txt);
 void Embedded_Console_WriteChar (char Ch);
-bool TransparentTextOut (int nXStart, int nYStart, const char* lpString);
 
 HDC GetConsoleDC(void);
 uint32_t GetConsole_FrameBuffer(void);
 uint32_t GetConsole_Width (void);
 uint32_t GetConsole_Height (void);
-void WhereXY(uint32_t* x, uint32_t* y);
-void GotoXY (uint32_t x, uint32_t y);
 
 COLORREF SetDCPenColor(HDC      hdc,							// Handle to the DC
 					  COLORREF crColor);						// The new pen color
@@ -692,15 +624,18 @@ BOOL BmpOut(HDC hdc,
 	uint32_t cY,
 	uint8_t* imgSrc);
 
-BOOL CvtBmpLine(HDC hdc,
-	uint32_t nXStart,
-	uint32_t nYStart,
-	uint32_t cX,
-	uint32_t imgDepth,
-	uint8_t* imgSrc);
-
-typedef char* caddr_t;
+#include <sys/types.h>
 caddr_t __attribute__((weak)) _sbrk(int incr);
+int __attribute__((weak)) _kill(int pid, int sig);
+int __attribute__((weak)) _getpid(void);
+int __attribute__((weak)) _read(int file, char *ptr, int len);
+int __attribute__((weak)) _close(int file);
+int __attribute__((weak)) _lseek(int file, int ptr, int dir);
+int __attribute__((weak)) _isatty(int file);
+#include <sys/stat.h>
+int __attribute__((weak)) _fstat(int file, struct stat *st);
+void __attribute__((weak)) _exit(int status);
+int _write(int file, char *ptr, int len);
 
 #ifdef __cplusplus								// If we are including to a C++ file
 }												// Close the extern C directive wrapper

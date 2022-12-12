@@ -28,7 +28,7 @@ else
 ifeq ($(OS), Windows_NT)
 ARMGNU := D:/gcc_pi_7_2/bin/arm-none-eabi
 else
-ARMGNU := arm-none-eabi
+ARMGNU := ${RTOSExploration}/gcc-arm-none-eabi-10.3-2021.10/bin/arm-none-eabi
 endif
 SMARTSTART := SmartStart32.S
 SPECIAL_FLAGS := -mno-unaligned-access

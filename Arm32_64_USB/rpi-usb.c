@@ -13,7 +13,7 @@
 #include <stdint.h>				// C standard needed for uint8_t, uint32_t, uint64_t etc
 #include <string.h>				// C standard needed for memset
 #include <wchar.h>				// C standard needed for UTF for unicode descriptor support
-#include "rpi-smartstart.h"		// Provides timing routines and mailbox routines to power up/down the USB.  
+#include "rpi-SmartStart.h"		// Provides timing routines and mailbox routines to power up/down the USB.  
 #include "rpi-usb.h"			// This units header
 
 #define ReceiveFifoSize 20480 /* 16 to 32768 */

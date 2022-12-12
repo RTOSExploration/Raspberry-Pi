@@ -1,7 +1,7 @@
 #include <stdbool.h>							// Needed for bool and true/false
 #include <stdint.h>								// Needed for uint8_t, uint32_t, etc
 #include <math.h>
-#include "rpi-smartstart.h"						// Need for mailbox
+#include "rpi-SmartStart.h"						// Need for mailbox
 #include "rpi-GLES.h"
 
 /* REFERENCES */

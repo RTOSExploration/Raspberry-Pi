@@ -1,7 +1,7 @@
 #include <stdarg.h>			// Varadic arguments
 #include <ctype.h>			// isdigit etc
 #include <string.h>			// strnlen used
-#include "rpi-smartstart.h"
+#include "rpi-SmartStart.h"
 #include "emb-stdio.h"			// This units header
 
 static int skip_atoi(const char **s)

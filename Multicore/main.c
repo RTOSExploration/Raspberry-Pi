@@ -1,7 +1,7 @@
 #include <stdbool.h>		// C standard needed for bool
 #include <stdint.h>			// C standard for uint8_t, uint16_t, uint32_t etc
 #include <stdlib.h>			// Needed for rand
-#include "rpi-smartstart.h"
+#include "rpi-SmartStart.h"
 #include "emb-stdio.h"
 
 static int idx = 0;

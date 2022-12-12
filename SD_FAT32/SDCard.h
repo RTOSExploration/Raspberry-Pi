@@ -1,7 +1,7 @@
 #ifndef SDCARD_H
 #define SDCARD_H
 #include <time.h>										// C standard for time needed for that and struct tm
-#include "rpi-smartstart.h"								// Provides all basic hardware access and printhandler definition and HANDLE type
+#include "rpi-SmartStart.h"								// Provides all basic hardware access and printhandler definition and HANDLE type
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
 {																			}

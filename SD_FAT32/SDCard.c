@@ -3,7 +3,7 @@
 #include <ctype.h>								// Needed for toupper for wildcard string match
 #include <wchar.h>								// Needed for UTF for long file name support
 #include <string.h>								// Needed for string copy
-#include "rpi-smartstart.h"						// Provides all basic hardware access
+#include "rpi-SmartStart.h"						// Provides all basic hardware access
 #include "emb-stdio.h"							// Provides printf functionality
 #include "SDCard.h"								// This units header
 

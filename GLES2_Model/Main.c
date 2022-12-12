@@ -3,7 +3,7 @@
 #include <string.h>				// Needed for memcpy
 #include <stdlib.h>
 #include "emb-stdio.h"			// Needed for printf
-#include "rpi-smartstart.h"		// Needed for smart start API 
+#include "rpi-SmartStart.h"		// Needed for smart start API 
 #include "rpi-GLES.h"
 #include "SDCard.h"
 

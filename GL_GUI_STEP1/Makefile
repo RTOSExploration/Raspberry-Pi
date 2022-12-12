@@ -27,7 +27,7 @@ Pi3: SMARTSTART = SmartStart32.S
 Pi3: IMGFILE = kernel8-32.img
 
 Pi2: CFLAGS = -Wall -O3 -mcpu=cortex-a7 -mfpu=neon -mfloat-abi=hard -ffreestanding -nostartfiles -std=c11 -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
-Pi2: ARMGNU = D:/gcc-arm-none-eabi-7/bin/arm-none-eabi
+Pi2: ARMGNU = ${RTOSExploration}/gcc-arm-none-eabi-10.3-2021.10/bin/arm-none-eabi
 Pi2: LINKERFILE = rpi32.ld
 Pi2: SMARTSTART = SmartStart32.S
 Pi2: IMGFILE = kernel7.img

@@ -28,7 +28,7 @@ extern "C" {									// Put extern C directive wrapper around
 
 #include <stdarg.h>			// Varadic arguments
 
-int __errno;
+//int __errno;
 
 //int vsprintf (char *buf, const char *fmt, va_list arg);
 //int sprintf (char *buf, const char *fmt, ...);

@@ -3,7 +3,7 @@
 #include <stdio.h>				// Needed for printf
 #include <string.h>
 #include <math.h>
-#include "rpi-smartstart.h"		
+#include "rpi-SmartStart.h"		
 #include "rpi-BasicHardware.h"
 
 static bool lit = false;

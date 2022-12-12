@@ -1,6 +1,6 @@
 #include <stdarg.h>			// Varadic arguments
 #include <string.h>			// strnlen used
-#include "rpi-smartstart.h" // Smartstart header
+#include "rpi-SmartStart.h" // Smartstart header
 #include "emb-stdio.h"		// This units header
 
 

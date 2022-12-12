@@ -7,7 +7,7 @@ extern "C" {									// Put extern C directive wrapper around
 
 #include <stdbool.h>							// Needed for bool and true/false
 #include <stdint.h>								// Needed for uint8_t, uint32_t, uint64_t etc
-#include "rpi-smartstart.h"						// Needed for RPi_IO_Base_Addr 
+#include "rpi-SmartStart.h"						// Needed for RPi_IO_Base_Addr 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
 {       Filename: rpi-BasicHardware.h							}

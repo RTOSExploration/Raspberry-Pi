@@ -7,9 +7,9 @@ extern "C" {									// Put extern C directive wrapper around
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
 {																			}			
-{       Filename: rpi-smartstart.h											}
-{       Copyright(c): Leon de Boer(LdB) 2017, 2018							}
-{       Version: 2.09														}
+{       Filename: rpi-SmartStart.h											}
+{       Copyright(c): Leon de Boer(LdB) 2017								}
+{       Version: 2.02														}
 {																			}		
 {***************[ THIS CODE IS FREEWARE UNDER CC Attribution]***************}
 {																            }
@@ -55,6 +55,9 @@ extern "C" {									// Put extern C directive wrapper around
 /* print handler function proto type */
 /* you can make a UART or SCREEN version and direct output to that call */
 typedef int (*printhandler) (const char *fmt, ...);
+
+/* Timer interrupt handler function proto type */
+typedef void (*TimerIrqHandler) (void);
 
 /***************************************************************************}
 {					     PUBLIC ENUMERATION CONSTANTS			            }
@@ -287,8 +290,7 @@ typedef union
 		ARM_CODE_TYPE ArmCodeTarget : 4;							// @0  Compiler code target
 		AARCH_MODE AArchMode : 1;									// @5  Code AARCH type compiler is producing
 		unsigned CoresSupported : 3;								// @6  Cores the code is setup to support
-		unsigned reserved : 23;										// @9-31 reserved
-		unsigned HardFloats : 1;									// @31	 Compiler code for hard floats
+		unsigned reserved : 24;										// @9-31 reserved
 	};
 	uint32_t Raw32;													// Union to access all 32 bits as a uint32_t
 } CODE_TYPE;
@@ -309,97 +311,20 @@ typedef union
 	uint32_t Raw32;													// Union to access all 32 bits as a uint32_t
 } CPU_ID;
 
-/*--------------------------------------------------------------------------}
-{				SMARTSTART VERSION STRUCTURE DEFINED						}
-{--------------------------------------------------------------------------*/
-typedef union
-{
-	struct
-	{
-		unsigned LoVersion : 16;									// @0-15  SmartStart minor version 
-		unsigned HiVersion : 8;										// @16-23 SmartStart major version
-		unsigned _reserved : 8;										// @24-31 reserved
-	};
-	uint32_t Raw32;													// Union to access all 32 bits as a uint32_t
-} SMARTSTART_VER;
-
 /***************************************************************************}
 {                      PUBLIC INTERFACE MEMORY VARIABLES                    }
 {***************************************************************************/
 extern uint32_t RPi_IO_Base_Addr;				// RPI IO base address auto-detected by SmartStartxx.S
-extern uint32_t RPi_ARM_TO_GPU_Alias;			// RPI ARM_TO_GPU_Alias auto-detected by SmartStartxx.S
 extern uint32_t RPi_BootAddr;					// RPI address processor booted from auto-detected by SmartStartxx.S
 extern uint32_t RPi_CoresReady;					// RPI cpu cores made read for use by SmartStartxx.S
-extern uint32_t RPi_CPUBootMode;				// RPI cpu mode it was in when it booted
 extern CPU_ID RPi_CpuId;						// RPI CPU type auto-detected by SmartStartxx.S
 extern CODE_TYPE RPi_CompileMode;				// RPI code type that compiler produced
+extern uint32_t RPi_CPUBootMode;				// RPI cpu mode it was in when it booted
 extern uint32_t RPi_CPUCurrentMode;				// RPI cpu current operation mode
-extern SMARTSTART_VER RPi_SmartStartVer;		// SmartStart version
 
 /***************************************************************************}
 {                       PUBLIC C INTERFACE ROUTINES                         }
 {***************************************************************************/
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
-{		IRQ AND FIQ HELPER ROUTINES PROVIDE BY RPi-SmartStart API	        }
-{++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-/*-[setIrqFuncAddress]------------------------------------------------------}
-. Sets the function pointer to be the called when an Irq interrupt occurs. 
-. CPU interrupts will be disabled so they can't trigger while changing.
-. RETURN: Old function pointer that was in use (will return 0 if never set).
-.--------------------------------------------------------------------------*/
-uintptr_t setIrqFuncAddress (void(*ARMaddress)(void));
-
-/*-[setFiqFuncAddress]------------------------------------------------------}
-. Sets the function pointer to be the called when an Fiq interrupt occurs.
-. CPU interrupts will be disabled so they can't trigger while changing.
-. RETURN: Old function pointer that was in use (will return 0 if never set).
-.--------------------------------------------------------------------------*/
-uintptr_t setFiqFuncAddress (void(*ARMaddress)(void));
-
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
-{			GLOBAL INTERRUPT CONTROL PROVIDE BY RPi-SmartStart API		    }
-{++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-/*-[EnableInterrupts]-------------------------------------------------------}
-. Enable global interrupts on any CPU core calling this function.
-.--------------------------------------------------------------------------*/
-void EnableInterrupts (void);
-
-/*-[DisableInterrupts]------------------------------------------------------}
-. Disable global interrupts on any CPU core calling this function.
-.--------------------------------------------------------------------------*/
-void DisableInterrupts (void);
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
-{	   	RPi-SmartStart API TO SET CORE EXECUTE ROUTINE AT ADDRESS 		    }
-{++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-/*-[CoreExecute]------------------------------------------------------------}
-. Commands the given parked core to execute the function provided. The core
-. called must be parked in the secondary spinloop. All secondary cores are
-. automatically parked by the normal SmartStart boot so are ready to deploy
-.--------------------------------------------------------------------------*/
-bool CoreExecute (uint8_t coreNum, void (*func) (void) );
-
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
-{		VC4 GPU ADDRESS HELPER ROUTINES PROVIDE BY RPi-SmartStart API	    }
-{++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-/*-[ARMaddrToGPUaddr]-------------------------------------------------------}
-. Converts an ARM address to GPU address by using the GPU_alias offset
-.--------------------------------------------------------------------------*/
-uint32_t ARMaddrToGPUaddr (void* ARMaddress);
-
-/*-[GPUaddrToARMaddr]-------------------------------------------------------}
-. Converts a GPU address to an ARM address by using the GPU_alias offset
-.--------------------------------------------------------------------------*/
-uint32_t GPUaddrToARMaddr (uint32_t GPUaddress);
-
-
 
 /*==========================================================================}
 {			 PUBLIC CPU ID ROUTINES PROVIDED BY RPi-SmartStart API			}
@@ -411,6 +336,29 @@ uint32_t GPUaddrToARMaddr (uint32_t GPUaddress);
 .--------------------------------------------------------------------------*/
 const char* RPi_CpuIdString (void);
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
+{			GLOBAL INTERRUPT CONTROL PROVIDE BY RPi-SmartStart API		    }
+{++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+extern void EnableInterrupts (void);			// Enable global interrupts
+extern void DisableInterrupts (void);			// Disable global interrupts
+
+
+typedef void (*CORECALLFUNC) (void);
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
+{	   	RPi-SmartStart API TO SET CORE EXECUTE ROUTINE AT ADDRESS 		    }
+{++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+/* Execute function on (1..CoresReady) */
+extern bool CoreExecute (uint8_t coreNum, CORECALLFUNC func); 
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
+{		VC4 GPU ADDRESS HELPER ROUTINES PROVIDE BY RPi-SmartStart API	    }
+{++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+/* ARM bus address to GPU bus address */
+extern uint32_t ARMaddrToGPUaddr (void* ARMaddress);
+
+/* GPU bus address to ARM bus address */
+extern uint32_t GPUaddrToARMaddr (uint32_t GPUaddress);
 
 /*==========================================================================}
 {			 PUBLIC GPIO ROUTINES PROVIDED BY RPi-SmartStart API			}
@@ -469,13 +417,13 @@ bool gpio_fixResistor (uint_fast8_t gpio, GPIO_FIX_RESISTOR resistor);
 {		   PUBLIC TIMER ROUTINES PROVIDED BY RPi-SmartStart API				}
 {==========================================================================*/
 
-/*-[timer_getTickCount64]---------------------------------------------------}
+/*-[timer_getTickCount]-----------------------------------------------------}
 . Get 1Mhz ARM system timer tick count in full 64 bit.
 . The timer read is as per the Broadcom specification of two 32bit reads
-. RETURN: tickcount value as an unsigned 64bit value in microseconds (usec)
+. RETURN: tickcount value as an unsigned 64bit value
 . 30Jun17 LdB
 .--------------------------------------------------------------------------*/
-uint64_t timer_getTickCount64 (void);
+uint64_t timer_getTickCount (void);
 
 /*-[timer_Wait]-------------------------------------------------------------}
 . This will simply wait the requested number of microseconds before return.
@@ -526,12 +474,14 @@ bool mailbox_tag_message (uint32_t* response_buf,					// Pointer to response buf
 {	  PUBLIC PI TIMER INTERRUPT ROUTINES PROVIDED BY RPi-SmartStart API		}
 {==========================================================================*/
 
-/*-[ClearTimerIrq]----------------------------------------------------------}
-. Simply clear the timer interupt by hitting the clear register. Any timer
-. interrupt should call this before exiting.
+/*-[setTimerIrqAddress]-----------------------------------------------------}
+. Allocates the given TimerIrqHandler function pointer to be the call when
+. a timer interrupt occurs. As we are undoubtedly setting up the interrupt
+. the interrupt is disabled. 
+. RETURN: The old function pointer that was in use (will return 0 for 1st).
 . 19Sep17 LdB
 .--------------------------------------------------------------------------*/
-void ClearTimerIrq (void);
+TimerIrqHandler setTimerIrqAddress (TimerIrqHandler ARMaddress);
 
 /*-[TimerIrqSetup]----------------------------------------------------------}
 . Allocates the given TimerIrqHandler function pointer to be the irq call 
@@ -540,8 +490,8 @@ void ClearTimerIrq (void);
 . RETURN: The old function pointer that was in use (will return 0 for 1st).
 . 19Sep17 LdB
 .--------------------------------------------------------------------------*/
-uintptr_t TimerIrqSetup (uint32_t period_in_us,				// Period between timer interrupts in usec
-						 void (*ARMaddress)(void));			// Function to call on interrupt
+TimerIrqHandler TimerIrqSetup (uint32_t period_in_us,				// Period between timer interrupts in usec
+							   TimerIrqHandler ARMaddress);         // Function to call on interrupt
 
 
 /*==========================================================================}

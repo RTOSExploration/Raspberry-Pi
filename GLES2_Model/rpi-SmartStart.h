@@ -7,7 +7,7 @@ extern "C" {									// Put extern C directive wrapper around
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
 {																			}			
-{       Filename: rpi-smartstart.h											}
+{       Filename: rpi-SmartStart.h											}
 {       Copyright(c): Leon de Boer(LdB) 2017								}
 {       Version: 2.02														}
 {																			}		
@@ -53,7 +53,11 @@ extern "C" {									// Put extern C directive wrapper around
 #define BitFontWth 8
 
 /* print handler function proto type */
+/* you can make a UART or SCREEN version and direct output to that call */
 typedef int (*printhandler) (const char *fmt, ...);
+
+/* Timer interrupt handler function proto type */
+typedef void (*TimerIrqHandler) (void);
 
 /***************************************************************************}
 {					     PUBLIC ENUMERATION CONSTANTS			            }
@@ -325,7 +329,7 @@ typedef void (*CORECALLFUNC) (void);
 extern bool CoreExecute (uint8_t coreNum, CORECALLFUNC func); 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
-{			MEMORY HELPER ROUTINES PROVIDE BY RPi-SmartStart API		    }
+{		VC4 GPU ADDRESS HELPER ROUTINES PROVIDE BY RPi-SmartStart API	    }
 {++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 /* ARM bus address to GPU bus address */
@@ -434,14 +438,39 @@ uint32_t mailbox_read (MAILBOX_CHANNEL channel);
 . This will post and execute the given variadic data onto the tags channel
 . on the mailbox system. You must provide the correct number of response
 . uint32_t variables and a pointer to the response buffer. You nominate the
-. number of data uint32_t for the call and fill the variadic data in.
+. number of data uint32_t for the call and fill the variadic data in. If you
+. do not want the response data back the use NULL for response_buffer.
 . RETURN: True for success and the response data will be set with data
 .         False for failure and the response buffer is untouched.
 . 04Jul17 LdB
 .--------------------------------------------------------------------------*/
-bool mailbox_tag_message (uint32_t* response_buf,					// Pointer to response buffer 
+bool mailbox_tag_message (uint32_t* response_buf,					// Pointer to response buffer (NULL = no response wanted)
 						  uint8_t data_count,						// Number of uint32_t data to be set for call
 						  ...);										// Variadic uint32_t values for call
+
+/*==========================================================================}
+{				     PUBLIC PI TIMER INTERRUPT ROUTINES						}
+{==========================================================================*/
+
+/*-[setTimerIrqAddress]-----------------------------------------------------}
+. Allocates the given TimerIrqHandler function pointer to be the call when
+. a timer interrupt occurs. As we are undoubtedly setting up the interrupt
+. the interrupt is disabled. 
+. RETURN: The old function pointer that was in use (will return 0 for 1st).
+. 19Sep17 LdB
+.--------------------------------------------------------------------------*/
+TimerIrqHandler setTimerIrqAddress (TimerIrqHandler ARMaddress);
+
+/*-[TimerIrqSetup]----------------------------------------------------------}
+. Allocates the given TimerIrqHandler function pointer to be the irq call 
+. when a timer interrupt occurs. The interrupt rate is set by providing a 
+. period in usec between triggers of the interrupt.
+. RETURN: The old function pointer that was in use (will return 0 for 1st).
+. 19Sep17 LdB
+.--------------------------------------------------------------------------*/
+TimerIrqHandler TimerIrqSetup (uint32_t period_in_us,				// Period between timer interrupts in usec
+							   TimerIrqHandler ARMaddress);         // Function to call on interrupt
+
 
 /*==========================================================================}
 {				     PUBLIC PI ACTIVITY LED ROUTINES						}
@@ -461,7 +490,7 @@ bool set_Activity_LED (bool on);
 
 /*-[ARM_setmaxspeed]--------------------------------------------------------}
 . This will set the ARM cpu to the maximum. You can optionally print confirm
-. message to screen.
+. message to screen but providing a print handler.
 . RETURN: True maxium speed was successfully set, false otherwise
 . 04Jul17 LdB
 .--------------------------------------------------------------------------*/
@@ -472,16 +501,20 @@ bool ARM_setmaxspeed (printhandler prn_handler);
 {==========================================================================*/
 
 /*-[displaySmartStart]------------------------------------------------------}
-. This will simply display 2 lines of basic smart start details to screen.
+. This will print 2 lines of basic smart start details to given print handler
 . 04Jul17 LdB
 .--------------------------------------------------------------------------*/
 void displaySmartStart (printhandler prn_handler);
+
+
+
 
 
 typedef int32_t		BOOL;							// BOOL is defined to an int32_t ... yeah windows is weird -1 is often returned
 typedef char		TCHAR;							// TCHAR is a char
 typedef uint32_t	COLORREF;						// COLORREF is a uint32_t
 typedef uintptr_t	HDC;							// HDC is really a pointer
+typedef uint32_t	HANDLE;							// Handle is an unsigned 32 bit
 
 #define TRUE 1
 #define FALSE 0
@@ -489,6 +522,7 @@ typedef uintptr_t	HDC;							// HDC is really a pointer
 /***************************************************************************}
 {		 		    PUBLIC STRUCTURE DEFINITIONS				            }
 ****************************************************************************/
+
 typedef struct __attribute__((__packed__, aligned(1))) tagRGB {
 	uint8_t rgbBlue;								// Blue
 	uint8_t rgbGreen;								// Green
@@ -523,7 +557,6 @@ typedef struct __attribute__((__packed__, aligned(4))) tagRGBA {
 		COLORREF ref;								// Colour reference
 	};
 } RGBA;
-
 
 typedef struct __attribute__((__packed__, aligned(1))) RGB565 {
 	unsigned B : 5;
@@ -584,6 +617,7 @@ static_assert(sizeof(RGB565) == 0x02, "Structure RGB565 should be 0x02 bytes in 
 bool PiConsole_Init(int Width, int Height, int Depth, printhandler prn_handler);
 void WriteText(int x, int y, char* txt);
 void Embedded_Console_WriteChar (char Ch);
+bool TransparentTextOut (int nXStart, int nYStart, const char* lpString);
 
 HDC GetConsoleDC(void);
 uint32_t GetConsole_FrameBuffer(void);
@@ -622,6 +656,13 @@ BOOL BmpOut(HDC hdc,
 	uint32_t nYStart,
 	uint32_t cX,
 	uint32_t cY,
+	uint8_t* imgSrc);
+
+BOOL CvtBmpLine(HDC hdc,
+	uint32_t nXStart,
+	uint32_t nYStart,
+	uint32_t cX,
+	uint32_t imgDepth,
 	uint8_t* imgSrc);
 
 #include <sys/types.h>

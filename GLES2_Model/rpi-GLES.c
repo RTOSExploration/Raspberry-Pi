@@ -3,7 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include "emb-stdio.h"
-#include "rpi-smartstart.h"						// Need for mailbox
+#include "rpi-SmartStart.h"						// Need for mailbox
 #include "rpi-GLES.h"
 #include "SDCard.h"
 

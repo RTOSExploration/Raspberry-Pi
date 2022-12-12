@@ -15,7 +15,7 @@ else
 endif 
 
 # The toolchain path and prefix for 32bit compiler .. 64bit compiler will override
-ARMGNU = D:/gcc_pi_7_2/bin/arm-none-eabi
+ARMGNU = ${RTOSExploration}/gcc-arm-none-eabi-10.3-2021.10/bin/arm-none-eabi
 
 # The name of the linker script to use for 32 bit compiler ...  64bit compiler will override
 LINKERFILE = rpi32.ld
@@ -40,7 +40,7 @@ Pi1: IMGFILE = kernel.img
 
 LDFLAGS = -nostdlib -nodefaultlibs -nostartfiles -ffreestanding -fno-asynchronous-unwind-tables -fomit-frame-pointer
 
-LIBFLAGS=-lc -lm -lgcc
+LIBFLAGS=-lc -lm -lgcc -lnosys
 
 LINKERFLAGS=-Wl,-gc-sections -Wl,--build-id=none -Wl,-Bdynamic
 
@@ -69,7 +69,7 @@ $(LIST) : kernel.elf
 	$(ARMGNU)-objcopy kernel.elf -O binary DiskImg/$(IMGFILE)
 	$(ARMGNU)-nm -n kernel.elf > $(MAP)
 
-OBJDIR := build
+OBJDIR := Build
 target = ${OBJDIR}/$(patsubst %.c,%.o,$(notdir ${1}))
 obj.c :=
 define obj

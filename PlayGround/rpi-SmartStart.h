@@ -7,7 +7,7 @@ extern "C" {									// Put extern C directive wrapper around
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
 {																			}			
-{       Filename: rpi-smartstart.h											}
+{       Filename: rpi-SmartStart.h											}
 {       Copyright(c): Leon de Boer(LdB) 2017								}
 {       Version: 2.02														}
 {																			}		
